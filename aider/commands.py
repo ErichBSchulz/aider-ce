@@ -316,7 +316,11 @@ class Commands:
     async def run(self, inp):
         if inp.startswith("!"):
             self.coder.event("command_run")
-            return await self.do_run("run", inp[1:])
+            self.io.placeholder = "Running command..."
+            try:
+                return await self.do_run("run", inp[1:])
+            finally:
+                self.io.placeholder = ""
 
         res = self.matching_commands(inp)
         if res is None:
@@ -325,11 +329,19 @@ class Commands:
         if len(matching_commands) == 1:
             command = matching_commands[0][1:]
             self.coder.event(f"command_{command}")
-            return await self.do_run(command, rest_inp)
+            self.io.placeholder = f"Running {command}..."
+            try:
+                return await self.do_run(command, rest_inp)
+            finally:
+                self.io.placeholder = ""
         elif first_word in matching_commands:
             command = first_word[1:]
             self.coder.event(f"command_{command}")
-            return await self.do_run(command, rest_inp)
+            self.io.placeholder = f"Running {command}..."
+            try:
+                return await self.do_run(command, rest_inp)
+            finally:
+                self.io.placeholder = ""
         elif len(matching_commands) > 1:
             self.io.tool_error(f"Ambiguous command: {', '.join(matching_commands)}")
         else:
