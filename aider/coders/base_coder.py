@@ -1099,7 +1099,7 @@ class Coder:
                                 f"input_task is None={input_task is None}, "
                                 f"user_message is None={user_message is None}, "
                                 f"processing_task is None={processing_task is None}, "
-                                f"placeholder='{self.io.placeholder}'"
+                                f"placeholder={self.io.placeholder!r}"
                             )
                             self.logger.debug("Getting input from user")
                         if not self.suppress_announcements_for_next_prompt:
@@ -1156,6 +1156,8 @@ class Coder:
                             self.io.stop_spinner()
 
                     if user_message and self.run_one_completed and self.compact_context_completed:
+                        if self.commands.is_command(user_message):
+                            self.io.placeholder = "Running command..."
                         processing_task = asyncio.create_task(
                             self._processing_logic(user_message, preproc)
                         )

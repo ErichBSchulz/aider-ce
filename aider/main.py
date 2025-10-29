@@ -11,7 +11,7 @@ import logging
 from dataclasses import fields
 from pathlib import Path
 
-DEBUG_COUNTER = 4
+DEBUG_COUNTER = 5
 
 try:
     import git
