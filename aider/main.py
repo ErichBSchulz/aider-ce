@@ -7,11 +7,8 @@ import sys
 import threading
 import traceback
 import webbrowser
-import logging
 from dataclasses import fields
 from pathlib import Path
-
-DEBUG_COUNTER = 6
 
 try:
     import git
@@ -615,22 +612,6 @@ async def main_async(argv=None, input=None, output=None, force_git_root=None, re
         io = get_io(False)
         io.tool_warning("Terminal does not support pretty output (UnicodeDecodeError)")
 
-    # setup logging
-    log_file = os.path.expanduser("~/.aider/debug.log")
-    if not os.path.exists(os.path.dirname(log_file)):
-        os.makedirs(os.path.dirname(log_file))
-
-    log_handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
-    log_formatter = logging.Formatter("%(asctime)s - %(levelname)s - BUG20251029 - %(message)s")
-    log_handler.setFormatter(log_formatter)
-    logger = logging.getLogger("aider_debug")
-    logger.addHandler(log_handler)
-    logger.setLevel(logging.DEBUG)
-    logger.propagate = False  # prevent output to console
-    logger.info(f"Aider starting up, DEBUG_COUNTER = {DEBUG_COUNTER}")
-
-    io.tool_output(f"DEBUG COUNTER: {DEBUG_COUNTER}")
-
     # Process any environment variables set via --set-env
     if args.set_env:
         for env_setting in args.set_env:
@@ -1075,7 +1056,6 @@ async def main_async(argv=None, input=None, output=None, force_git_root=None, re
             context_compaction_max_tokens=args.context_compaction_max_tokens,
             context_compaction_summary_tokens=args.context_compaction_summary_tokens,
             map_cache_dir=args.map_cache_dir,
-            logger=logger,
         )
     except UnknownEditFormat as err:
         io.tool_error(str(err))

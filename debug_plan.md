@@ -86,11 +86,11 @@ tracking to ensure clarity and correctness.
     specific placeholder and its cleanup will still be handled within `aider/commands.py`. The
     debug counter will be incremented to version 5.
     *Status: This fixed the race condition, but introduced a distracting spinner during user prompts.*
-*   `[ ]` **Fix Distracting Spinner**
+*   `[✓]` **Fix Distracting Spinner**
     To fix the spinner appearing during user prompts, I will remove the `self.io.start_spinner("Processing...")`
     call from `_run_patched` in `aider/coders/base_coder.py`. Spinners for LLM activity are
     handled elsewhere. The debug counter will be incremented to version 6.
-*   `[ ]` **Clean up debugging code**
+*   `[✓]` **Clean up debugging code**
     Once the bug is confirmed to be fixed, I will remove the debug counter, the file logger,
     and all the `BUG20251029` logging statements from the code.
 
