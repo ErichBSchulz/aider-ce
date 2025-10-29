@@ -381,12 +381,14 @@ class Coder:
         map_cache_dir=".",
         repomap_in_memory=False,
         preserve_todo_list=False,
+        logger=None,
     ):
         # initialize from args.map_cache_dir
         self.map_cache_dir = map_cache_dir
 
         # Fill in a dummy Analytics if needed, but it is never .enable()'d
         self.analytics = analytics if analytics is not None else Analytics()
+        self.logger = logger
 
         self.event = self.analytics.event
         self.chat_language = chat_language
@@ -1074,6 +1076,8 @@ class Coder:
         processing_task = None
         try:
             if with_message:
+                if self.logger:
+                    self.logger.debug(f"Running with message: {with_message}")
                 self.io.user_input(with_message)
                 await self.run_one(with_message, preproc)
                 return self.partial_response_content
@@ -1088,6 +1092,8 @@ class Coder:
                         and not user_message
                         and (not processing_task or not self.io.placeholder)
                     ):
+                        if self.logger:
+                            self.logger.debug("Getting input from user")
                         if not self.suppress_announcements_for_next_prompt:
                             self.show_announcements()
                         self.suppress_announcements_for_next_prompt = False
@@ -1123,6 +1129,8 @@ class Coder:
 
                             try:
                                 user_message = input_task.result()
+                                if self.logger:
+                                    self.logger.debug(f"Got user_message: {user_message!r}")
                             except (asyncio.CancelledError, KeyboardInterrupt):
                                 user_message = None
                             input_task = None
