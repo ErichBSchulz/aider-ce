@@ -1142,8 +1142,6 @@ class Coder:
                     if user_message and self.run_one_completed and self.compact_context_completed:
                         if self.commands.is_command(user_message):
                             self.io.placeholder = "Running command..."
-                        if self.commands.is_command(user_message):
-                            self.io.placeholder = "Running command..."
                         processing_task = asyncio.create_task(
                             self._processing_logic(user_message, preproc)
                         )
