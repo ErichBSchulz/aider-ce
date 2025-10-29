@@ -10,6 +10,8 @@ import webbrowser
 from dataclasses import fields
 from pathlib import Path
 
+DEBUG_COUNTER = 1
+
 try:
     import git
 except ImportError:
@@ -611,6 +613,8 @@ async def main_async(argv=None, input=None, output=None, force_git_root=None, re
             raise err
         io = get_io(False)
         io.tool_warning("Terminal does not support pretty output (UnicodeDecodeError)")
+
+    io.tool_output(f"DEBUG COUNTER: {DEBUG_COUNTER}")
 
     # Process any environment variables set via --set-env
     if args.set_env:
