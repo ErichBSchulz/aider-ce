@@ -1093,6 +1093,14 @@ class Coder:
                         and (not processing_task or not self.io.placeholder)
                     ):
                         if self.logger:
+                            self.logger.debug(
+                                "CONDITION MET to get input. "
+                                f"confirmation_in_progress={self.confirmation_in_progress}, "
+                                f"input_task is None={input_task is None}, "
+                                f"user_message is None={user_message is None}, "
+                                f"processing_task is None={processing_task is None}, "
+                                f"placeholder='{self.io.placeholder}'"
+                            )
                             self.logger.debug("Getting input from user")
                         if not self.suppress_announcements_for_next_prompt:
                             self.show_announcements()

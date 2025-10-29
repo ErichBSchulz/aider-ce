@@ -294,6 +294,8 @@ class Commands:
             return
 
         try:
+            if self.coder.logger:
+                self.coder.logger.debug(f"Executing command: {cmd_name} with args: {args!r}")
             if asyncio.iscoroutinefunction(cmd_method):
                 return await cmd_method(args)
             else:
