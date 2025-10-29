@@ -1162,7 +1162,6 @@ class Coder:
                             self._processing_logic(user_message, preproc)
                         )
                         # Start spinner for processing task
-                        self.io.start_spinner("Processing...")
                         user_message = None  # Clear message after starting task
                 except KeyboardInterrupt:
                     if processing_task:
