@@ -559,6 +559,16 @@ class InputOutput:
                     )
                     setattr(self, attr_name, None)  # Reset invalid color to None
 
+    def _get_confirmation_key_bindings(self):
+        """Get key bindings for confirmation prompts (simpler than main input)."""
+        kb = KeyBindings()
+
+        @kb.add("enter")
+        def _(event):
+            event.current_buffer.validate_and_handle()
+
+        return kb
+
     def _get_style(self):
         style_dict = {}
         if not self.pretty:
@@ -1126,29 +1136,23 @@ class InputOutput:
                 while True:
                     try:
                         if self.prompt_session:
-                            if (
-                                not self.input_task
-                                or self.input_task.done()
-                                or self.input_task.cancelled()
-                            ):
-                                coder = self.coder() if self.coder else None
-
-                                if coder:
-                                    self.input_task = asyncio.create_task(coder.get_input())
-                                    await asyncio.sleep(0)
-
-                            if (
-                                self.input_task
-                                and not self.input_task.done()
-                                and not self.input_task.cancelled()
-                            ):
-                                self.prompt_session.message = question
-                                self.prompt_session.app.invalidate()
-                            else:
-                                await asyncio.sleep(0)
-
-                            res = await self.input_task
-                            await asyncio.sleep(0)
+                            # For confirmation prompts, use a temporary session without history
+                            temp_session_kwargs = {
+                                "input": self.input,
+                                "output": self.output,
+                                "editing_mode": self.editingmode,
+                            }
+                            if self.editingmode == EditingMode.VI:
+                                temp_session_kwargs["cursor"] = ModalCursorShapeConfig()
+                            
+                            # Create a temporary prompt session without history
+                            temp_prompt_session = PromptSession(**temp_session_kwargs)
+                            
+                            res = await temp_prompt_session.prompt_async(
+                                question,
+                                style=self._get_style(),
+                                key_bindings=self._get_confirmation_key_bindings(),
+                            )
                         else:
                             res = await asyncio.get_event_loop().run_in_executor(
                                 None, input, question
