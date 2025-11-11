@@ -480,7 +480,16 @@ file_excludelist = ["get_bottom_toolbar", "<genexpr>"]
 
 def custom_tracer(frame, event, arg):
     # Get the absolute path of the file where the code is executing
-    filename = os.path.abspath(frame.f_code.co_filename)
+    if os:
+        filename = os.path.abspath(frame.f_code.co_filename)
+    else:
+        if log_file:
+            log_file.write(
+                f"-> no os in tracer - {time.time()}\n"
+            )
+        else:
+            print("no os or log_file in tracer")
+        return None
 
     # --- THE FILTERING LOGIC ---
     # Only proceed if the file path is INSIDE the project root
