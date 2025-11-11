@@ -687,9 +687,6 @@ class InputOutput:
             print()
 
     def interrupt_input(self):
-        if self.input_task and not self.input_task.done():
-            self.input_task.cancel()
-
         if self.prompt_session and self.prompt_session.app:
             # Store any partial input before interrupting
             self.placeholder = self.prompt_session.app.current_buffer.text
@@ -704,6 +701,14 @@ class InputOutput:
         """Reject all outstanding confirmation dialogs."""
         # This method is now a no-op since we removed the confirmation_future logic
         pass
+
+    async def recreate_input(self, future=None):
+        if not self.input_task or self.input_task.done() or self.input_task.cancelled():
+            coder = self.coder() if self.coder else None
+
+            if coder:
+                self.input_task = asyncio.create_task(coder.get_input())
+                await asyncio.sleep(0)
 
     async def get_input(
         self,
@@ -1033,11 +1038,15 @@ class InputOutput:
         hist = "\n" + content.strip() + "\n\n"
         self.append_chat_history(hist)
 
-    async def offer_url(self, url, prompt="Open URL for more info?", allow_never=True):
+    async def offer_url(
+        self, url, prompt="Open URL for more info?", allow_never=True, acknowledge=False
+    ):
         """Offer to open a URL in the browser, returns True if opened."""
         if url in self.never_prompts:
             return False
-        if await self.confirm_ask(prompt, subject=url, allow_never=allow_never):
+        if await self.confirm_ask(
+            prompt, subject=url, allow_never=allow_never, acknowledge=acknowledge
+        ):
             webbrowser.open(url)
             return True
         return False
@@ -1078,6 +1087,7 @@ class InputOutput:
         group=None,
         group_response=None,
         allow_never=False,
+        acknowledge=False,
     ):
         self.num_user_asks += 1
 
@@ -1136,23 +1146,20 @@ class InputOutput:
                 while True:
                     try:
                         if self.prompt_session:
-                            # For confirmation prompts, use a temporary session without history
-                            temp_session_kwargs = {
-                                "input": self.input,
-                                "output": self.output,
-                                "editing_mode": self.editingmode,
-                            }
-                            if self.editingmode == EditingMode.VI:
-                                temp_session_kwargs["cursor"] = ModalCursorShapeConfig()
-                            
-                            # Create a temporary prompt session without history
-                            temp_prompt_session = PromptSession(**temp_session_kwargs)
-                            
-                            res = await temp_prompt_session.prompt_async(
-                                question,
-                                style=self._get_style(),
-                                key_bindings=self._get_confirmation_key_bindings(),
-                            )
+                            await self.recreate_input()
+
+                            if (
+                                self.input_task
+                                and not self.input_task.done()
+                                and not self.input_task.cancelled()
+                            ):
+                                self.prompt_session.message = question
+                                self.prompt_session.app.invalidate()
+                            else:
+                                await asyncio.sleep(0)
+
+                            res = await self.input_task
+                            await asyncio.sleep(0)
                         else:
                             res = await asyncio.get_event_loop().run_in_executor(
                                 None, input, question
@@ -1172,7 +1179,8 @@ class InputOutput:
                     good = any(valid_response.startswith(res) for valid_response in valid_responses)
 
                     if good:
-                        self.set_confirmation_acknowledgement()
+                        if not acknowledge:
+                            self.set_confirmation_acknowledgement()
                         self.start_spinner(self.last_spinner_text)
                         break
 
