@@ -36,3 +36,4 @@ aider/__version__.py
 aider/_version.py
 *.pyc
 env/
+tmp.benchmarks
